@@ -93,7 +93,8 @@ hierarchy = pd.DataFrame({
 st.sidebar.markdown("### 🧭 Navigation & Filters")
 
 # Section 1: Data Filters
-with st.sidebar.expander("🔍 Filter Data", expanded=True):
+with st.sidebar.expander("🔍 Filter Data", expanded=False):
+    st.markdown("Select domains, subdomains, and indicators to customize the dashboard.")
     selected_domains = st.multiselect("Domains", options=hierarchy["Domain"].unique(), default=hierarchy["Domain"].unique())
     filtered_hierarchy = hierarchy[hierarchy["Domain"].isin(selected_domains)]
 
@@ -108,11 +109,13 @@ with st.sidebar.expander("🔍 Filter Data", expanded=True):
 
 # Section 2: Country Filter
 with st.sidebar.expander("🌍 Select Countries", expanded=False):
+    st.markdown("Choose one or more countries to include in the analysis.")
     countries = data["Country"].unique().tolist()
     selected_countries = st.multiselect("Countries", options=countries, default=countries)
 
 # Section 3: Info & Resources
 with st.sidebar.expander("📘 Info & Resources", expanded=False):
+    st.markdown("Access user guidance and project background information.")
     st.markdown("[📥 Download User Manual](https://your-link-if-hosted.com)")
     st.markdown("[🌐 Project Website](https://www.co3socialcontract.eu)")
     
@@ -341,6 +344,7 @@ with tabs[3]:
     df_to_plot = df_dom if level == "Domain" else df_sub if level == "Subdomain" else df_composite[["Country", "Composite_Index"]]
     x_axis = st.selectbox("Select X-axis index:", df_to_plot.columns[1:], key="x_axis")
     y_axis = st.selectbox("Select Y-axis index:", df_to_plot.columns[1:], key="y_axis")
+
     fig_scatter = px.scatter(
         df_to_plot,
         x=x_axis,
@@ -348,15 +352,62 @@ with tabs[3]:
         text="Country",
         color=np.where(df_to_plot["Country"] == "EU", "EU", "Other"),
         color_discrete_map={"EU": "red", "Other": "steelblue"},
-        hover_data={"Country": True, x_axis: ":.2f", y_axis: ":.2f"}
+        hover_data={"Country": True, x_axis: ":.2f", y_axis: ":.2f"},
     )
-    fig_scatter.update_traces(textposition='top center')
+
+    fig_scatter.update_traces(
+        textposition='top center',
+        marker=dict(size=16),
+        textfont=dict(size=14)
+    )
+
     fig_scatter.update_layout(
         title=f"{x_axis} vs {y_axis} by Country",
         xaxis=dict(tickformat=".2f"),
         yaxis=dict(tickformat=".2f"),
-        height=700
+        height=700,
+        showlegend=False
     )
+
+    if st.checkbox("Show regression line and R-squared"):
+        x_vals = df_to_plot[x_axis].astype(float)
+        y_vals = df_to_plot[y_axis].astype(float)
+        mask = x_vals.notna() & y_vals.notna()
+        x_vals = x_vals[mask]
+        y_vals = y_vals[mask]
+        slope, intercept = np.polyfit(x_vals, y_vals, 1)
+        line_x = np.linspace(x_vals.min(), x_vals.max(), 100)
+        line_y = slope * line_x + intercept
+        r_value = np.corrcoef(x_vals, y_vals)[0, 1]
+        r_squared = r_value ** 2
+
+        fig_scatter.add_trace(go.Scatter(
+            x=line_x,
+            y=line_y,
+            mode='lines',
+            name=f"Fit (R² = {r_squared:.2f})",
+            line=dict(color="black", dash="dot")
+        ))
+
+        fig_scatter.add_annotation(
+            xref="paper", yref="paper",
+            x=0.98, y=0.98,
+            text=f"R² = {r_squared:.2f}<br>y = {slope:.2f}x + {intercept:.2f}",
+            showarrow=False,
+            font=dict(size=14, color="black"),
+            align="right",            
+        )
+
+        
+
+        
+
+        
+
+        
+
+    
+
     st.plotly_chart(fig_scatter, use_container_width=True)
 
 with tabs[4]:
