@@ -1,0 +1,1 @@
+startCommand: streamlit run https://sc-indicators-db.streamlit.app/ --server.port=10000 --server.address=0.0.0.0
