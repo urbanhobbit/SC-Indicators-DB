@@ -88,6 +88,14 @@ hierarchy = pd.DataFrame({
 
 
 
+
+# Load User Manual
+try:
+    with open("Social Contract Indicators Dashboard User Manual.pdf", "rb") as pdf_file:
+        manual_pdf = pdf_file.read()
+except FileNotFoundError:
+    manual_pdf = None
+
 # Sidebar Filters
 
 st.sidebar.markdown("### 🧭 Navigation & Filters")
@@ -116,7 +124,13 @@ with st.sidebar.expander("🌍 Select Countries", expanded=False):
 # Section 3: Info & Resources
 with st.sidebar.expander("📘 Info & Resources", expanded=False):
     st.markdown("Access user guidance and project background information.")
-    st.markdown("[📥 Download User Manual](https://your-link-if-hosted.com)")
+    if manual_pdf:
+        st.download_button(label="📥 Download User Manual",
+                           data=manual_pdf,
+                           file_name="Social_Contract_Indicators_Manual.pdf",
+                           mime='application/pdf')
+    else:
+        st.warning("Manual file not found.")
     st.markdown("[🌐 Project Website](https://www.co3socialcontract.eu)")
     
     filtered_hierarchy = hierarchy[hierarchy["Domain"].isin(selected_domains)]
@@ -493,13 +507,15 @@ with tabs[6]:
 
 with tabs[7]:
     st.subheader("📖 User Manual")
-    with open("Social Contract Indicators Dashboard User Manual.pdf", "rb") as pdf_file:
-        PDFbyte = pdf_file.read()
-    st.download_button(label="📥 Download Manual (PDF)",
-                       data=PDFbyte,
-                       file_name="Social_Contract_Indicators_Manual.pdf",
-                       mime='application/pdf')
-    st.markdown("Or [view the full manual online](https://your-link-if-hosted.com) 📄", unsafe_allow_html=True)
+    if manual_pdf:
+        st.download_button(label="📥 Download Manual (PDF)",
+                           data=manual_pdf,
+                           file_name="Social_Contract_Indicators_Manual.pdf",
+                           mime='application/pdf')
+    else:
+        st.warning("Manual file not found.")
+    
+    st.info("Please download the manual to view details.")
 
 # Footer
 st.markdown("""
