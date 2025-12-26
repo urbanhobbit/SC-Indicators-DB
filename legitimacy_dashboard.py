@@ -428,7 +428,12 @@ with tabs[4]:
     st.subheader("Radar Chart Comparison")
     level = st.radio("Select level of indices:", ["Domain", "Subdomain", "Composite"], horizontal=True, key="radar_level_menu_2")
     df_radar = df_dom if level == "Domain" else df_sub if level == "Subdomain" else df_composite[["Country", "Composite_Index"]]
-    selected_countries_radar = st.multiselect("Select countries to compare:", df_radar["Country"].tolist(), default=["EU"])
+    
+    # Fix for StreamlitAPIException: Ensure default exists
+    available_radar_countries = df_radar["Country"].tolist()
+    default_radar = ["EU"] if "EU" in available_radar_countries else (available_radar_countries[:1] if available_radar_countries else [])
+    
+    selected_countries_radar = st.multiselect("Select countries to compare:", available_radar_countries, default=default_radar)
     dimensions = df_radar.columns[1:]
     fig_radar = go.Figure()
     colors = px.colors.qualitative.Set2
